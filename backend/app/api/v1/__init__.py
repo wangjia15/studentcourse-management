@@ -2,7 +2,8 @@ from fastapi import APIRouter
 
 from app.api.v1.endpoints import (
     auth, courses, grades, users,
-    analytics, reports, admin, teachers, students
+    analytics, reports, admin, teachers, students,
+    batch_processing
 )
 
 api_router = APIRouter()
@@ -33,3 +34,6 @@ api_router.include_router(teachers.router, prefix="/teachers", tags=["teachers"]
 
 # Student-specific endpoints
 api_router.include_router(students.router, prefix="/students", tags=["students"])
+
+# Batch processing endpoints
+api_router.include_router(batch_processing.router, prefix="/batch", tags=["batch-processing"])

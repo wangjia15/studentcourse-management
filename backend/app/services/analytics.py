@@ -5,7 +5,7 @@ from sqlalchemy import func, and_, or_
 
 from app.models.user import User, UserRole
 from app.models.course import Course
-from app.models.grade import Grade, GradeType
+from app.models.grade import Grade, GradeType, GradeStatus
 from app.models.enrollment import Enrollment
 from app.schemas.analytics import (
     GPACalculationResponse,
@@ -15,63 +15,63 @@ from app.schemas.analytics import (
     ClassRankingResponse,
 )
 
+# Import new advanced services
+from .gpa_calculation import GPACalculationService
+from .grade_distribution import GradeDistributionService
+from .trend_analysis import TrendAnalysisService
+from .statistical_reports import StatisticalReportService
+from .visualization import VisualizationService
+from .performance_optimization import PerformanceOptimizedAnalytics
+
 
 class AnalyticsService:
-    """分析服务类"""
+    """增强分析服务类 - 集成高级统计分析功能"""
+
+    def __init__(self, redis_url: Optional[str] = None):
+        """初始化分析服务"""
+        # 初始化高级服务组件
+        self.gpa_service = GPACalculationService()
+        self.distribution_service = GradeDistributionService()
+        self.trend_service = TrendAnalysisService()
+        self.report_service = StatisticalReportService()
+        self.visualization_service = VisualizationService()
+        self.performance_service = PerformanceOptimizedAnalytics(redis_url)
+
+        # 保持向后兼容的方法映射
+        self._setup_backward_compatibility()
 
     def calculate_student_gpa(
         self,
         db: Session,
         student_id: int,
         academic_year: Optional[str] = None,
-        semester: Optional[str] = None
+        semester: Optional[str] = None,
+        use_optimized: bool = True
     ) -> GPACalculationResponse:
-        """计算学生GPA"""
+        """计算学生GPA - 使用优化的计算引擎"""
 
-        # 构建查询条件
-        conditions = [Grade.student_id == student_id, Grade.is_published == True]
+        if use_optimized:
+            # 使用性能优化的计算方法
+            gpa_data = self.performance_service.calculate_student_gpa_optimized(
+                db, student_id, academic_year, semester
+            )
+        else:
+            # 使用原始的详细计算方法
+            gpa_data = self.gpa_service.calculate_student_gpa_detailed(
+                db, student_id, academic_year, semester
+            )
 
-        if academic_year:
-            conditions.append(Grade.academic_year == academic_year)
-        if semester:
-            conditions.append(Grade.semester == semester)
-
-        # 查询成绩记录
-        grades = db.query(Grade).filter(and_(*conditions)).all()
-
-        if not grades:
-            raise ValueError("没有找到符合条件的成绩记录")
-
-        # 计算GPA
-        total_gpa_points = 0
-        total_credits = 0
-        grade_breakdown = {"A": 0, "B": 0, "C": 0, "D": 0, "F": 0}
-
-        for grade in grades:
-            if grade.gpa_points and grade.course:
-                total_gpa_points += grade.gpa_points * grade.course.credits
-                total_credits += grade.course.credits
-
-                if grade.letter_grade:
-                    grade_breakdown[grade.letter_grade] = grade_breakdown.get(grade.letter_grade, 0) + 1
-
-        overall_gpa = total_gpa_points / total_credits if total_credits > 0 else 0
-
-        # 获取学生信息
-        student = db.query(User).filter(User.id == student_id).first()
-        if not student:
-            raise ValueError("学生不存在")
-
+        # 转换为响应格式
         return GPACalculationResponse(
-            student_id=student_id,
-            student_name=student.full_name,
-            total_gpa=round(overall_gpa, 3),
+            student_id=gpa_data["student_id"],
+            student_name=gpa_data.get("student_name", "Unknown"),
+            total_gpa=gpa_data["total_gpa"],
             academic_year=academic_year,
             semester=semester,
-            total_credits=total_credits,
-            total_courses=len(grades),
-            grade_breakdown=grade_breakdown,
-            calculation_date=datetime.utcnow()
+            total_credits=gpa_data["total_credits"],
+            total_courses=gpa_data["total_courses"],
+            grade_breakdown=gpa_data.get("grade_breakdown", {"A": 0, "B": 0, "C": 0, "D": 0, "F": 0}),
+            calculation_date=gpa_data.get("calculation_timestamp", datetime.utcnow())
         )
 
     def calculate_class_gpa(
@@ -474,3 +474,277 @@ class AnalyticsService:
                 return published_grade is not None
 
         return False
+
+    # ============ 新增高级分析方法 ============
+
+    def calculate_detailed_student_gpa(
+        self,
+        db: Session,
+        student_id: int,
+        academic_year: Optional[str] = None,
+        semester: Optional[str] = None,
+        include_retake: bool = True
+    ) -> Dict[str, Any]:
+        """计算详细学生GPA - 包含所有明细信息"""
+        return self.gpa_service.calculate_student_gpa_detailed(
+            db, student_id, academic_year, semester, include_retake
+        )
+
+    def calculate_cumulative_gpa(
+        self,
+        db: Session,
+        student_id: int,
+        up_to_academic_year: Optional[str] = None,
+        up_to_semester: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """计算累计GPA"""
+        return self.gpa_service.calculate_cumulative_gpa(
+            db, student_id, up_to_academic_year, up_to_semester
+        )
+
+    def predict_graduation_gpa(
+        self,
+        db: Session,
+        student_id: int,
+        remaining_credits: int,
+        expected_gpa: Optional[float] = None
+    ) -> Dict[str, Any]:
+        """预测毕业GPA"""
+        return self.gpa_service.predict_graduation_gpa(
+            db, student_id, remaining_credits, expected_gpa
+        )
+
+    def analyze_course_grade_distribution(
+        self,
+        db: Session,
+        course_id: int,
+        academic_year: Optional[str] = None,
+        semester: Optional[str] = None,
+        include_details: bool = False
+    ) -> Dict[str, Any]:
+        """分析课程成绩分布"""
+        return self.distribution_service.analyze_course_grade_distribution(
+            db, course_id, academic_year, semester, include_details
+        )
+
+    def analyze_class_grade_distribution(
+        self,
+        db: Session,
+        class_name: str,
+        academic_year: Optional[str] = None,
+        semester: Optional[str] = None,
+        course_types: Optional[List[str]] = None
+    ) -> Dict[str, Any]:
+        """分析班级成绩分布"""
+        return self.distribution_service.analyze_class_grade_distribution(
+            db, class_name, academic_year, semester, course_types
+        )
+
+    def compare_class_performance(
+        self,
+        db: Session,
+        class_names: List[str],
+        academic_year: Optional[str] = None,
+        semester: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """班级成绩对比分析"""
+        return self.distribution_service.compare_class_performance(
+            db, class_names, academic_year, semester
+        )
+
+    def analyze_student_grade_trend(
+        self,
+        db: Session,
+        student_id: int,
+        academic_years: Optional[List[str]] = None,
+        prediction_enabled: bool = True
+    ) -> Dict[str, Any]:
+        """分析学生成绩趋势"""
+        return self.trend_service.analyze_student_grade_trend(
+            db, student_id, academic_years, prediction_enabled
+        )
+
+    def analyze_class_trend(
+        self,
+        db: Session,
+        class_name: str,
+        academic_years: Optional[List[str]] = None,
+        comparison_enabled: bool = True
+    ) -> Dict[str, Any]:
+        """分析班级成绩趋势"""
+        return self.trend_service.analyze_class_trend(
+            db, class_name, academic_years, comparison_enabled
+        )
+
+    def analyze_course_trend(
+        self,
+        db: Session,
+        course_id: int,
+        academic_years: Optional[List[str]] = None,
+        teacher_comparison: bool = True
+    ) -> Dict[str, Any]:
+        """分析课程成绩趋势"""
+        return self.trend_service.analyze_course_trend(
+            db, course_id, academic_years, teacher_comparison
+        )
+
+    def generate_personal_statistical_report(
+        self,
+        db: Session,
+        student_id: int,
+        academic_year: Optional[str] = None,
+        semester: Optional[str] = None,
+        format_type: str = "detailed"
+    ) -> Dict[str, Any]:
+        """生成个人统计报表"""
+        return self.report_service.generate_personal_statistical_report(
+            db, student_id, academic_year, semester, format_type
+        )
+
+    def generate_class_statistical_report(
+        self,
+        db: Session,
+        class_name: str,
+        academic_year: Optional[str] = None,
+        semester: Optional[str] = None,
+        include_individual_details: bool = False
+    ) -> Dict[str, Any]:
+        """生成班级统计报表"""
+        return self.report_service.generate_class_statistical_report(
+            db, class_name, academic_year, semester, include_individual_details
+        )
+
+    def generate_system_statistical_report(
+        self,
+        db: Session,
+        academic_year: Optional[str] = None,
+        semester: Optional[str] = None,
+        scope: str = "university"
+    ) -> Dict[str, Any]:
+        """生成系统统计报表"""
+        return self.report_service.generate_system_statistical_report(
+            db, academic_year, semester, scope
+        )
+
+    def generate_semester_summary_report(
+        self,
+        db: Session,
+        academic_year: str,
+        semester: str
+    ) -> Dict[str, Any]:
+        """生成学期汇总报告"""
+        return self.report_service.generate_semester_summary_report(
+            db, academic_year, semester
+        )
+
+    def get_visualization_data(
+        self,
+        db: Session,
+        chart_type: str,
+        chart_subtype: str,
+        entity_id: Optional[int] = None,
+        entity_name: Optional[str] = None,
+        academic_year: Optional[str] = None,
+        semester: Optional[str] = None,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """获取可视化数据"""
+        if chart_type == "pie":
+            return self.visualization_service.get_pie_chart_data(
+                db, chart_subtype, entity_id, entity_name, academic_year, semester
+            )
+        elif chart_type == "bar":
+            return self.visualization_service.get_bar_chart_data(
+                db, chart_subtype, kwargs.get("entity_ids"), kwargs.get("entity_names"),
+                academic_year, semester
+            )
+        elif chart_type == "line":
+            return self.visualization_service.get_line_chart_data(
+                db, chart_subtype, entity_id, entity_name, kwargs.get("academic_years")
+            )
+        elif chart_type == "scatter":
+            return self.visualization_service.get_scatter_plot_data(
+                db, chart_subtype, kwargs.get("x_metric"), kwargs.get("y_metric"),
+                kwargs.get("entity_type", "student"), kwargs.get("filters")
+            )
+        elif chart_type == "radar":
+            return self.visualization_service.get_radar_chart_data(
+                db, entity_id, kwargs.get("entity_type", "student"), academic_year, semester
+            )
+        elif chart_type == "heatmap":
+            return self.visualization_service.get_heatmap_data(
+                db, chart_subtype, academic_year, kwargs.get("filters")
+            )
+        else:
+            return {"error": f"不支持的图表类型: {chart_type}"}
+
+    def get_dashboard_data(
+        self,
+        db: Session,
+        user_id: int,
+        user_role: str,
+        academic_year: Optional[str] = None,
+        semester: Optional[str] = None
+    ) -> Dict[str, Any]:
+        """获取仪表板数据"""
+        return self.visualization_service.get_dashboard_summary_data(
+            db, user_id, user_role, academic_year, semester
+        )
+
+    def parallel_batch_analyze(
+        self,
+        db: Session,
+        student_ids: List[int],
+        analysis_type: str = "gpa",
+        academic_year: Optional[str] = None,
+        semester: Optional[str] = None
+    ) -> List[Dict[str, Any]]:
+        """并行批量分析"""
+        if analysis_type == "gpa":
+            # 这里需要实现异步调用，暂时使用同步方式
+            results = []
+            for student_id in student_ids:
+                try:
+                    gpa_data = self.calculate_student_gpa(
+                        db, student_id, academic_year, semester
+                    )
+                    results.append({
+                        "student_id": student_id,
+                        "gpa": gpa_data.total_gpa,
+                        "credits": gpa_data.total_credits,
+                        "courses": gpa_data.total_courses
+                    })
+                except Exception:
+                    continue
+            return results
+        else:
+            return [{"error": f"不支持的分析类型: {analysis_type}"}]
+
+    def optimize_performance(
+        self,
+        db: Session,
+        operation: str,
+        **kwargs
+    ) -> Dict[str, Any]:
+        """性能优化操作"""
+        if operation == "warm_cache":
+            student_ids = kwargs.get("student_ids", [])
+            class_names = kwargs.get("class_names", [])
+            self.performance_service.warm_up_cache(db, student_ids, class_names)
+            return {"status": "success", "message": "缓存预热完成"}
+        elif operation == "clear_cache":
+            pattern = kwargs.get("pattern", "")
+            cleared_count = self.performance_service.invalidate_cache_pattern(pattern)
+            return {"status": "success", "cleared_count": cleared_count}
+        elif operation == "performance_metrics":
+            return self.performance_service.get_performance_metrics()
+        elif operation == "cleanup_cache":
+            cleared_count = self.performance_service.cleanup_expired_cache()
+            return {"status": "success", "cleared_count": cleared_count}
+        else:
+            return {"error": f"不支持的操作: {operation}"}
+
+    def _setup_backward_compatibility(self):
+        """设置向后兼容性"""
+        # 确保原有的类方法仍然可用
+        pass
