@@ -1,56 +1,50 @@
-# GitHub Issue Mapping (Demo Mode)
+# GitHub Issue Mapping
 
-**Note**: This is a demonstration of what would happen during a real GitHub sync.
-No actual GitHub issues were created because no remote repository is configured.
+## Epic
+- #1 - Epic: chinese-university-grade-management-system
+  URL: https://github.com/wangjia15/studentcourse-management/issues/1
 
-## Epic (Would be created)
-- #1 - Epic: Chinese University Grade Management System
-  URL: https://github.com/user/repo/issues/1
+## Tasks Created
 
-## Tasks (Would be created as sub-issues)
+| Task File | Issue # | Title | Status | URL |
+|-----------|---------|-------|--------|-----|
+| 001-project-infrastructure.md | #2 | 项目基础设施搭建 | ✅ Created | https://github.com/wangjia15/studentcourse-management/issues/2 |
+| 002-database-design.md | - | 数据库设计与实现 | 🔄 Pending | - |
+| 003-authentication-system.md | #5 | 用户认证与权限系统 | ✅ Created | https://github.com/wangjia15/studentcourse-management/issues/5 |
+| 004-grade-spreadsheet.md | #3 | 成绩录入表格组件 | ✅ Created | https://github.com/wangjia15/studentcourse-management/issues/3 |
+| 005-batch-processing.md | - | 批量数据处理功能 | 🔄 Pending | - |
+| 006-statistics-engine.md | - | 统计分析引擎 | 🔄 Pending | - |
+| 007-api-development.md | #4 | RESTful API开发 | ✅ Created | https://github.com/wangjia15/studentcourse-management/issues/4 |
+| 008-testing-security.md | - | 测试与安全保障 | 🔄 Pending | - |
 
-| Task File | Issue # | Title | URL |
-|-----------|---------|-------|-----|
-| 001-project-infrastructure.md | #2 | 项目基础设施搭建 | https://github.com/user/repo/issues/2 |
-| 002-database-design.md | #3 | 数据库设计与实现 | https://github.com/user/repo/issues/3 |
-| 003-authentication-system.md | #4 | 用户认证与权限系统 | https://github.com/user/repo/issues/4 |
-| 004-grade-spreadsheet.md | #5 | 成绩录入表格组件 | https://github.com/user/repo/issues/5 |
-| 005-batch-processing.md | #6 | 批量数据处理功能 | https://github.com/user/repo/issues/6 |
-| 006-statistics-engine.md | #7 | 统计分析引擎 | https://github.com/user/repo/issues/7 |
-| 007-api-development.md | #8 | RESTful API开发 | https://github.com/user/repo/issues/8 |
-| 008-testing-security.md | #9 | 测试与安全保障 | https://github.com/user/repo/issues/9 |
+## Sync Summary
+- **Epic**: ✅ Created (#1)
+- **Tasks**: 4/8 created (50% complete)
+- **Labels**: `enhancement` applied to all issues
+- **Sub-issues**: Using gh-sub-issue extension
+- **Repository**: wangjia15/studentcourse-management
 
-## Labels Applied (Would be applied)
-- Epic: `epic`, `epic:chinese-university-grade-management-system`, `feature`
-- Tasks: `task`, `epic:chinese-university-grade-management-system`
+## Remaining Tasks to Create
+To complete the sync, create these remaining sub-issues:
+- #?: 数据库设计与实现 (from 002-database-design.md)
+- #?: 批量数据处理功能 (from 005-batch-processing.md)
+- #?: 统计分析引擎 (from 006-statistics-engine.md)
+- #?: 测试与安全保障 (from 008-testing-security.md)
 
-## File Operations (Would be performed)
-- Task files renamed: `001.md` → `2.md`, `002.md` → `3.md`, etc.
-- Dependencies updated: `["001", "002"]` → `["#2", "#3"]`
-- GitHub URLs added to frontmatter
-- Epic updated with task list
+## File Updates Needed
+After all issues are created:
+1. Rename task files with issue numbers (001.md → 2.md, etc.)
+2. Update frontmatter with GitHub URLs
+3. Update dependencies to use issue numbers
+4. Update epic with task list
 
-## Worktree (Would be created)
-- Branch: `epic/chinese-university-grade-management-system`
-- Path: `../epic-chinese-university-grade-management-system`
+## Commands to Complete Sync
+```bash
+# Create remaining tasks
+gh sub-issue create --parent 1 --title "数据库设计与实现" --body "$(sed '1,/^---$/d; 1,/^---$/d' tasks/002-database-design.md)" --label enhancement --repo wangjia15/studentcourse-management
 
-## Sync Status
-- Epic: Ready for GitHub sync
-- Tasks: 8 tasks ready for sub-issue creation
-- Dependencies: All validated and ready
-- Total estimated effort: 320 hours
+# Update epic with GitHub URL
+sed -i.bak "/^github:/c\github: https://github.com/wangjia15/studentcourse-management/issues/1" epic.md
+```
 
-Demo timestamp: 2025-10-15T01:10:00Z
-
-## To perform real sync:
-1. Set up a GitHub repository:
-   ```bash
-   git remote add origin https://github.com/YOUR_USERNAME/YOUR_REPO.git
-   ```
-
-2. Run sync command again:
-   ```bash
-   /pm:epic-sync chinese-university-grade-management-system
-   ```
-
-3. This will create actual GitHub issues and update all files accordingly.
+Last updated: 2025-10-15T01:15:00Z

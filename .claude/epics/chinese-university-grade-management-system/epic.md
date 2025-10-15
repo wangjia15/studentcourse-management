@@ -4,7 +4,7 @@ status: backlog
 created: 2025-10-15T01:03:21Z
 progress: 0%
 prd: .claude/prds/chinese-university-grade-management-system.md
-github: [Will be updated when synced to GitHub]
+github: https://github.com/wangjia15/studentcourse-management/issues/1
 ---
 
 # Epic: Chinese University Grade Management System
