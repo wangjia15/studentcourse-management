@@ -7,7 +7,9 @@ dependencies: ["001-project-infrastructure"]
 assignee:
 tags: [database, backend, sql, schema]
 created: 2025-10-15T01:05:20Z
+updated: 2025-10-15T02:20:00Z
 epic: chinese-university-grade-management-system
+github: https://github.com/wangjia15/studentcourse-management/issues/6
 ---
 
 # 任务: 数据库设计与实现

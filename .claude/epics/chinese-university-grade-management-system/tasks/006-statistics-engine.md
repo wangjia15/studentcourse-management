@@ -7,7 +7,9 @@ dependencies: ["002-database-design", "005-batch-processing"]
 assignee:
 tags: [backend, analytics, statistics, gpa, calculations]
 created: 2025-10-15T01:05:20Z
+updated: 2025-10-15T02:20:00Z
 epic: chinese-university-grade-management-system
+github: https://github.com/wangjia15/studentcourse-management/issues/8
 ---
 
 # 任务: 统计分析引擎
